@@ -10,8 +10,8 @@ b8 a0 00 76 07 00 08 17 31 4b 31 62 00 62 00 72
 63 07 01 77 01 0b 06 45 4d 48 XX XX XX XX XX XX
 01 72 62 01 65 0c 6a 50 b5 77 77 07 81 81 c7 82
 03 ff 01 01 01 01 04 45 4d 48 01 77 07 01 00 00
-00 09 ff 01 01 01 01 0b 06 45 4d 48 01 02 71 59
-09 6d 01 77 07 01 00 01 08 00 ff 63 01 82 01 62
+00 09 ff 01 01 01 01 0b 06 45 4d 48 XX XX XX XX
+XX XX 01 77 07 01 00 01 08 00 ff 63 01 82 01 62
 1e 52 ff 56 00 04 eb 09 6c 01 77 07 01 00 01 08
 01 ff 01 01 62 1e 52 ff 56 00 04 eb 09 6c 01 77
 07 01 00 01 08 02 ff 01 01 62 1e 52 ff 56 00 00
@@ -131,7 +131,7 @@ SML_PublicClose.Res ::= SEQUENCE
       77                                        -- SML_GetList.Res is a list of 7 elements
 
          01                                     -- clientId Octet String OPTIONAL
-         0b 06 45 4d 48 01 02 71 59 09 6d       -- serverId Octet String
+         0b 06 45 4d 48 XX XX XX XX XX XX       -- serverId Octet String
          01                                     -- listName Octet String OPTIONAL
          72                                     -- actSensorTime SML_Time OPTIONAL
             62 01                               -- TAG: secIndex
