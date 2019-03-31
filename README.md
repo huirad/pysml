@@ -2,7 +2,7 @@
 Decoder library for SML (Smart Meter Language)
 
 ## What and why
-Goal of this project is to create a compact python library for decoding SML output from a electric power meter.
+Goal of this project is to create a compact python library for decoding SML output from a electric power meter or at least for the one which I am using (the EMH ED300L).
 
 Side goal is to improve my personal skills in python programming.
 
@@ -22,8 +22,8 @@ From [Volkszaehler::Software](http://wiki.volkszaehler.org/software/sml#beispiel
 
 * [Technische Richtlinie BSI TR-03109-1](https://www.bsi.bund.de/SharedDocs/Downloads/DE/BSI/Publikationen/TechnischeRichtlinien/TR03109/TR-03109-1_Anlage_Feinspezifikation_Drahtgebundene_LMN-Schnittstelle_Teilb.pdf?__blob=publicationFile) - the main specification
 * [DLMS blue book](https://www.dlms.com/files/Blue-Book-Ed-122-Excerpt.pdf) - contains OBIS codes and measurement units
-* [EDI@Energy Codeliste der OBIS-Kennzahlen für den deutschen Energiemarkt](https://www.edi-energy.de/index.php?id=38&tx_bdew_bdew%5Buid%5D=64&tx_bdew_bdew%5Baction%5D=download&tx_bdew_bdew%5Bcontroller%5D=Dokument&cHash=d2cc24364c4712ad83676043d5cc02f5)
-* [Beschreibung SML Datenprotokoll für SMART METER](http://itrona.ch/stuff/F2-2_PJM_5_Beschreibung%20SML%20Datenprotokoll%20V1.0_28.02.2011.pdf)
+* [EDI@Energy Codeliste der OBIS-Kennzahlen fÃ¼r den deutschen Energiemarkt](https://www.edi-energy.de/index.php?id=38&tx_bdew_bdew%5Buid%5D=64&tx_bdew_bdew%5Baction%5D=download&tx_bdew_bdew%5Bcontroller%5D=Dokument&cHash=d2cc24364c4712ad83676043d5cc02f5)
+* [Beschreibung SML Datenprotokoll fÃ¼r SMART METER](http://itrona.ch/stuff/F2-2_PJM_5_Beschreibung%20SML%20Datenprotokoll%20V1.0_28.02.2011.pdf)
 
 On OBIS codes from [DLMS blue book](https://www.dlms.com/files/Blue-Book-Ed-122-Excerpt.pdf)
 
@@ -39,7 +39,7 @@ On OBIS codes from [DLMS blue book](https://www.dlms.com/files/Blue-Book-Ed-122-
 
 ## References Protocol Analyis
 
-* [Stefan Weigert](http://www.stefan-weigert.de/php_loader/sml.php) - great approach, Pythin script
+* [Stefan Weigert](http://www.stefan-weigert.de/php_loader/sml.php) - great approach, Python script
 * [msxfaq.de 1](https://www.msxfaq.de/sonst/bastelbude/smartmeter_d0_sml_protokoll.htm)
 * [msxfaq.de 2](https://www.msxfaq.de/sonst/bastelbude/smartmeter_d0_sml.htm)
 * [volkszaehler.org](https://wiki.volkszaehler.org/hardware/channels/meters/power/edl-ehz/emh-ehz-h1)
