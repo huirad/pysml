@@ -53,6 +53,7 @@ __credits__ = "Copyright: Helmut Schmidt. License: MPLv2"
 #  Date         Author              Reason
 #  04-Jan-2020  Helmut Schmidt      v0.1 Initial version - not many sanity checks
 #  05-Jan-2020  Helmut Schmidt      v0.2 Improve Robustness
+#  05-Jan-2020  Helmut Schmidt      v0.3 Improve Robustness
 #
 #######################################################################
 
@@ -100,7 +101,7 @@ def openSerial(device):
     
     try:
         #For reading 316 bytes at 9600 baud, less than 1 second should be sufficient
-        #But the messages cycle time is 2 seconds - so take this + some headroom
+        #But the messages cycle time is 2.x seconds - so take this + some headroom
         result = serial.Serial(device, 9600, timeout=2+1)
     except (serial.SerialException):
         pass
@@ -154,6 +155,36 @@ def readSMLTransportMessage(ser):
 
     return result
 
+
+def getOctetString(buffer, offset):
+    """Get the octet string value from the buffer at the given offset.
+
+    Parameters
+    ----------
+    buffer: bytes
+        the buffer
+    int: offset
+        the offset
+    
+    Returns
+    -------
+    bytes
+        On succes: The extracted octet string value.
+    None
+        On failure
+    """
+
+    result = None # default result
+    
+    if (len(buffer)-offset) < 2:
+        pass
+    elif (buffer[offset] & 0xF0) == 0x00: # octet string up to 15 bytes
+        size = (buffer[offset] & 0x0F) # size including the 1-byte tag
+        if (len(buffer)-offset) >= size:
+            result = buffer[offset+1:offset+size]
+    elif (buffer[offset] & 0xF0) == 0x80: # larger octet string
+        pass # not yet handled
+    return result
 
 def getInt(buffer, offset):
     """Get the integer value from the buffer at the given offset.
@@ -237,9 +268,20 @@ def assert_python3():
     assert(sys.version_info.minor >= 5)
     
 #some hard-coded offsets
+OF_reqFileId = 27
 OF_secIndex = 84
+OF_OID_energyTotal = 132
+OF_unit_energyTotal = 143
+OF_scaler_energyTotal = 145
 OF_energyTotal = 147
+OF_OID_powerCurrent = 197
+OF_unit_powerCurrent = 206
+OF_scaler_powerCurrent = 208
 OF_powerCurrent = 210
+
+#some hard-coded OIDs
+OID_energyTotal = b'\x01\x00\x01\x08\x00\xff'
+OID_powerCurrent = b'\x01\x00\x0f\x07\x00\xff'
 
 ################################ MAIN #################################
 def main():
@@ -256,6 +298,7 @@ def main():
     
     #output variables
     error = None
+    reqFileId = None
     secIndex = None
     energyTotal = None
     powerCurrent = None
@@ -267,10 +310,17 @@ def main():
             t_msg = readSMLTransportMessage(ser)        
             if t_msg:      
                 dump(t_msg, "SMLTransportMessage", verbose >=1)
-                #dump(t_msg[27:34], "reqFileId", True) # looks like this is always incremented by 2 
+                #dump(t_msg[27:34], "reqFileId", True) 
+                reqFileId = getOctetString(t_msg, OF_reqFileId) # looks like this is always incremented by 2 
                 secIndex = getInt(t_msg, OF_secIndex) # looks like this is always incremented by 2 or 3 or 4
-                energyTotal = getInt(t_msg, OF_energyTotal)
-                powerCurrent = getInt(t_msg, OF_powerCurrent)
+                if ((getOctetString(t_msg, OF_OID_energyTotal) == OID_energyTotal) 
+                    and (getInt(t_msg, OF_unit_energyTotal) == 30)
+                    and (getInt(t_msg, OF_scaler_energyTotal) == -1)):
+                    energyTotal = getInt(t_msg, OF_energyTotal)
+                if ((getOctetString(t_msg, OF_OID_powerCurrent) == OID_powerCurrent) 
+                    and (getInt(t_msg, OF_unit_powerCurrent) == 27)
+                    and (getInt(t_msg, OF_scaler_powerCurrent) == -1)):                    
+                    powerCurrent = getInt(t_msg, OF_powerCurrent)
             else:
                 error = "ERR_MESG"
         else:
@@ -278,10 +328,10 @@ def main():
     else:
         error = "ERR_OPEN"
 
-    now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
 
     if error is None:
-        print(now, "OK", secIndex, powerCurrent, energyTotal)
+        print(now, "OK", reqFileId.hex(), secIndex, powerCurrent, energyTotal)
     else:
         print(now, error)
 
