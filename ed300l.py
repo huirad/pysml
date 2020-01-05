@@ -51,13 +51,13 @@ __credits__ = "Copyright: Helmut Schmidt. License: MPLv2"
 #
 # Module-History
 #  Date         Author              Reason
-#  05-Jan-2020  Helmut Schmidt      v0.1 Initial version - not many sanity checks
+#  04-Jan-2020  Helmut Schmidt      v0.1 Initial version - not many sanity checks
+#  05-Jan-2020  Helmut Schmidt      v0.2 Improve Robustness
 #
 #######################################################################
 
 #The program starts here
-import serial, argparse, sys
-#import sys, time, datetime, struct
+import serial, argparse, sys, datetime
 
 #global variables
 verbose = 0     #debug level
@@ -92,14 +92,19 @@ def openSerial(device):
     -------
     Serial
         On succes: serial device handle
-    Exception
+    None
         On failure
     """    
     
-    #For reading 316 bytes at 9600 baud, less than 1 second should be sufficient
-    #But the messages cycle time is 2 seconds - so take this + some headroom
-    ser = serial.Serial(device, 9600, timeout=2+1)
-    return ser
+    result = None # default result
+    
+    try:
+        #For reading 316 bytes at 9600 baud, less than 1 second should be sufficient
+        #But the messages cycle time is 2 seconds - so take this + some headroom
+        result = serial.Serial(device, 9600, timeout=2+1)
+    except (serial.SerialException):
+        pass
+    return result
 
 
 def readSMLTransportMessage(ser):
@@ -119,23 +124,31 @@ def readSMLTransportMessage(ser):
     """
 
     result = None # default result
+    max_read = 5 #limit the number of read attemps to avoid endless loop
     
     startMessage = b'\x01\x01\x01\x01'
     escapeSequence = b'\x1b\x1b\x1b\x1b'
     endMessageB1 = b'\x1a'
+    #search for the 1st escape sequence - it may be for start or end
     t_esc_found = False
-    while not t_esc_found:    
+    while not t_esc_found and (max_read > 0):
         t_esc = ser.read_until(escapeSequence)
+        max_read -= 1
         t_esc_found = t_esc.endswith(escapeSequence)
         dump(t_esc, "t_esc", verbose >=2)
+    #search for the packet starting with startMessage and ending with escapeSequence
     t_msg_found = False
-    while not t_msg_found:
+    while t_esc_found and (not t_msg_found) and (max_read > 0):
         t_msg = ser.read_until(escapeSequence)
+        max_read -= 1
         t_msg_found = t_msg.startswith(startMessage)
         dump(t_msg, "t_msg", verbose >=2)
-    t_end = ser.read(4)
-    t_end_found = t_end.startswith(endMessageB1)
-    dump(t_end, "t_end", verbose >=2)
+    #sverify that the terminating escapeSequence is followed by endMessageB1
+    t_end_found = False
+    if t_msg_found and (max_read > 0):
+        t_end = ser.read(4)
+        t_end_found = t_end.startswith(endMessageB1)
+        dump(t_end, "t_end", verbose >=2)
     if t_end_found:
         result = escapeSequence + t_msg + t_end
 
@@ -241,22 +254,36 @@ def main():
         global verbose
         verbose = args.verbose
     
+    #output variables
+    error = None
+    secIndex = None
+    energyTotal = None
+    powerCurrent = None
+
+
     if args.device:	
         ser = openSerial(args.device)
         if ser:
-            while True:
-                t_msg = readSMLTransportMessage(ser)        
-                if t_msg:      
-                    dump(t_msg, "SMLTransportMessage", verbose >=1)
-                    dump(t_msg[27:34], "reqFileId", True) # looks like this is always incremented by 2 
-                    secIndex = getInt(t_msg, OF_secIndex) # looks like this is always incremented by 2 or 3 or 4
-                    print("secIndex=", secIndex)
-                    energyTotal = getInt(t_msg, OF_energyTotal)
-                    print("energyTotal=", energyTotal)
-                    powerCurrent = getInt(t_msg, OF_powerCurrent)
-                    print("powerCurrent=", powerCurrent)                
+            t_msg = readSMLTransportMessage(ser)        
+            if t_msg:      
+                dump(t_msg, "SMLTransportMessage", verbose >=1)
+                #dump(t_msg[27:34], "reqFileId", True) # looks like this is always incremented by 2 
+                secIndex = getInt(t_msg, OF_secIndex) # looks like this is always incremented by 2 or 3 or 4
+                energyTotal = getInt(t_msg, OF_energyTotal)
+                powerCurrent = getInt(t_msg, OF_powerCurrent)
+            else:
+                error = "ERR_MESG"
+        else:
+            error = "ERR_DEVICE"
+    else:
+        error = "ERR_OPEN"
 
+    now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+    if error is None:
+        print(now, "OK", secIndex, powerCurrent, energyTotal)
+    else:
+        print(now, error)
 
 if __name__ == "__main__":
     # ensure that we are really running python 3, not python 2
