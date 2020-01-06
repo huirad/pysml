@@ -1,0 +1,16 @@
+#Plot ED300L log files with gnuplot
+
+file = 'ed300l.txt'
+
+set ter wxt size 1400,850 title sprintf("Stromverbrauch %s",file)
+set title 'Current power and energy total over time'
+set xlabel "Time"
+set ylabel "Power consumption in W"
+set y2label "Energy total in kWh"
+set ytics nomirror
+set y2tics
+set xdata time
+set format x "%Y-%m-%d %H:%M:%S"  
+set xtics rotate by -45
+set timefmt "%Y-%m-%d %H:%M:%S"
+plot file using 1:($6/10) title "Power consumption" w lp, '' using 1:($7/10000) axes x1y2 title "Energy total" w l
