@@ -76,3 +76,4 @@ Or store it directly in a binary file for later analysis
 * Python - portable between Windows/Linux/Raspberry Pi
 * Simple - no full SML decoder to reduce complexity
 * Robust - even if the ED300L specific format is assumed: implement saninty checks (expected values, crc)
+
